@@ -1,2 +1,3 @@
 # puclasses
-Scheduling Assistant for classes at Purdue University 
+Aim: To build a user-friendly scheduling assistant for students at Purdue
+Inspired by nusmods.com  
