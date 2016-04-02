@@ -5,30 +5,36 @@ import os
 import re
 import json
 
-def check_dirname_exist():
-  path_name = os.path.dirname(os.path.realpath(__file__))
-  path_name = path_name + "/classes"
-  print(path_name)
+#This script will scrape the information from mypurdue.purdue.edu
 
-
-def data_scrape():
-    br = mechanize.Browser()
-    br.set_handle_equiv(True)
-    br.set_handle_gzip(True)
-    br.set_handle_redirect(True)
-    br.set_handle_referer(True)
-    br.set_handle_robots(False)
-
-    cj = cookielib.LWPCookieJar()
-    br.set_cookiejar(cj)
-
-    br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
-    br.addheaders = [('User-agent', 'Chrome')]
-
-    br.open('https://selfservice.mypurdue.purdue.edu/prod/bwckctlg.p_disp_dyn_ctlg?')
+def return_list_of_all_possible_terms(br):
+    list_of_terms = []
     br.select_form(nr=0)
-    br['cat_term_in']=['201420']
-    response = br.submit()
+    for control in br.form.controls:
+        if control.name == "cat_term_in":
+            for item in control.items:
+                if item.name != "None":
+                    list_of_terms.append(item.name)
+    return list_of_terms
+
+
+#Function data_scrape will use python libraries mechanize and BeautifulSoup to
+#get specific details off each class, that will eventually by used to make API calls
+def data_scrape():
+
+    #Initializing the headless browser
+    br = intialize_browser()
+
+    #Opening mypurdue.purdue.edu - The Course Catalog
+    br.open('https://selfservice.mypurdue.purdue.edu/prod/bwckctlg.p_disp_dyn_ctlg?')
+
+    #Returns list of all possible terms at myPurdue
+    list_of_terms = return_list_of_all_possible_terms(br)
+
+    for term in list_of_terms:
+        print term
+        #br['cat_term_in']=[term]
+        #response = br.submit()
     html_source = response.read()
     #print(html_source)
     br.select_form(nr=0)
@@ -116,7 +122,7 @@ def data_scrape():
             value = title.split("-")[0].strip().split(" ")[-1]
             url = "https://selfservice.mypurdue.purdue.edu/prod/bwckctlg.p_disp_course_detail?cat_term_in=201610&subj_code_in=ECE&crse_numb_in=" + str(value)
             response = br.open(url)
-            print(response.read())
+            #print(response.read())
             class_dict = {}
             class_list = []
             class_dict["Course_Code"] = title
@@ -136,5 +142,25 @@ def data_scrape():
     with open('total_compile.json', 'w') as f:
         f.write(str(final_list))
 
+def check_dirname_exist():
+  path_name = os.path.dirname(os.path.realpath(__file__))
+  path_name = path_name + "/classes"
+  #print(path_name)
+
+def intialize_browser():
+    br = mechanize.Browser()
+    br.set_handle_equiv(True)
+    br.set_handle_gzip(True)
+    br.set_handle_redirect(True)
+    br.set_handle_referer(True)
+    br.set_handle_robots(False)
+
+    cj = cookielib.LWPCookieJar()
+    br.set_cookiejar(cj)
+
+    br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+    br.addheaders = [('User-agent', 'Chrome')]
+    br.open('https://selfservice.mypurdue.purdue.edu/prod/bwckctlg.p_disp_dyn_ctlg?')
+    return br
 
 data_scrape()
