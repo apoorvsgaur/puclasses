@@ -33,6 +33,7 @@ def data_scrape():
             links_to_classes_in_a_deparment = return_links_of_all_courses_in_a_department(br, course_title)
             for link in links_to_classes_in_a_deparment:
                 full_link = "https://selfservice.mypurdue.purdue.edu/" + str(link)
+                course_info_dict = return_info_about_a_course_info(full_link, br)
 
     # flash = 0
     # for tr in soup.find_all('tr'):
@@ -179,6 +180,23 @@ def return_links_of_all_courses_in_a_department(br, course_title):
     #    first_title = x.text
     #    print first_title
 
+def return_info_about_a_course_info(full_link, br):
+    response = br.open(full_link)
+    html = response.read()
+    soup = BeautifulSoup(html, 'html.parser')
+    find_course_title = soup.find_all('td', {'class':'nttitle'})
+    full_course_title_name = find_course_title[0].text
+    course_code = full_course_title_name.split("-")[0].strip()
+    course_title = full_course_title_name.split("-")[1].strip()
 
+    #all_info_about_course = soup.find_all('td', {'class':'ntdefault'})
+    course_description = soup.find_all('td', {'class':'ntdefault'})
+    descriptors = course_description[0].encode('utf-8').split('<span class="fieldlabeltext">')
+    for descriptor in descriptors:
+        attribute = descriptor.replace('<td class="ntdefault">', '').replace('<br>','').replace('</br>','').replace("<b>","").replace("</b>","").replace("</td>","").strip()
+        soup = BeautifulSoup(attribute, 'html.parser')
+        find_links = soup.find_all('a')
+        for link in find_links:
+            print link 
 
 data_scrape()
